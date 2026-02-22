@@ -1,9 +1,18 @@
-# Analizador lexico
+# Analizador lexico y sintactico
 
 El analizador lexico (lexer) toma el texto de entrada y lo divide en tokens.
 Un token es una pieza con tipo (por ejemplo, `SI`, `ID`, `NUMERO`) y valor.
 Con PLY, cada regla (regex) identifica una categoria de token y el lexer
 recorre el texto de izquierda a derecha generando la lista de tokens.
+
+Ademas, el analizador sintactico (parser) valida la estructura del codigo
+usando la secuencia de tokens y reporta errores de sintaxis.
+
+### Estructura del proyecto
+
+- `main.py`: interfaz principal (Tkinter) y punto de entrada de la aplicacion.
+- `lexer.py`: reglas del analizador lexico.
+- `parser.py`: reglas del analizador sintactico.
 
 ### Que detecta
 

@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from lexer import build_lexer
+from parser import build_parser
 
 
 class LexerApp(tk.Tk):
@@ -44,7 +45,7 @@ class LexerApp(tk.Tk):
         output_frame = ttk.Frame(self)
         output_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=8)
 
-        output_label = ttk.Label(output_frame, text="Tokens:")
+        output_label = ttk.Label(output_frame, text="Tokens lexicos:")
         output_label.pack(anchor="w")
 
         columns = ("type", "value", "line", "pos")
@@ -80,20 +81,41 @@ class LexerApp(tk.Tk):
     def _set_errors(self, errors):
         self.error_text.configure(state="normal")
         self.error_text.delete("1.0", tk.END)
-        if errors:
-            for char, line, pos in errors:
-                self.error_text.insert(
-                    tk.END,
-                    f"Caracter inesperado '{char}' en linea {line}, posicion {pos}.\n",
-                )
+        for error in errors:
+            self.error_text.insert(tk.END, f"{error}\n")
         self.error_text.configure(state="disabled")
 
-    def analyze(self):
+    def _clear_tokens(self):
         for item in self.token_table.get_children():
             self.token_table.delete(item)
+
+    def _build_error_messages(self, parse_result):
+        errors = []
+
+        for char, line, pos in parse_result["errores_lexicos"]:
+            errors.append(
+                f"[Lexico] Caracter inesperado '{char}' en linea {line}, posicion {pos}."
+            )
+
+        for error in parse_result["errores_sintacticos"]:
+            errors.append(
+                f"[Sintactico] {error['mensaje']} en linea {error['linea']}, posicion {error['posicion']}."
+            )
+
+        if not errors:
+            errors.append("Analisis sintactico completado sin errores.")
+
+        return errors
+
+    def analyze(self):
+        self._clear_tokens()
         self._set_errors([])
 
         data = self.input_text.get("1.0", tk.END)
+
+        parser = build_parser()
+        parse_result = parser.parse(data)
+
         lexer = build_lexer()
         lexer.input(data)
 
@@ -104,8 +126,7 @@ class LexerApp(tk.Tk):
                 values=(token.type, token.value, token.lineno, token.lexpos),
             )
 
-        if lexer.errors:
-            self._set_errors(lexer.errors)
+        self._set_errors(self._build_error_messages(parse_result))
 
 
 if __name__ == "__main__":
