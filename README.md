@@ -88,3 +88,31 @@ int $x = 1;
 ```
 
 El simbolo `$` no esta definido como token y se reporta como error.
+
+# Analizador semantico:
+
+recorre el AST y verifica que el programa tenga sentido.
+
+# Verificaciones que realiza:
+
+1. Variable no declarada → usar una variable que no fue declarada antes
+2. Variable re-declarada → declarar la misma variable dos veces en el mismo bloque
+3. Tipos incompatibles → asignar un valor del tipo incorrecto a una variable
+
+### Ejemplo para probar analizador semantico
+
+```
+int x = 10;
+float y = 3.14;
+bool activo = true;
+string nombre = "Juan";
+
+int x = 5;
+
+int edad = "veinte";
+
+if (activo == true) {
+    int resultado = x + y;
+    z = 99;
+}
+```

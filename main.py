@@ -6,6 +6,7 @@ from tkinter import ttk
 
 from lexer import build_lexer
 from parser import build_parser
+from semantic import build_semantic_analyzer
 
 
 class LexerApp(tk.Tk):
@@ -89,7 +90,7 @@ class LexerApp(tk.Tk):
         for item in self.token_table.get_children():
             self.token_table.delete(item)
 
-    def _build_error_messages(self, parse_result):
+    def _build_error_messages(self, parse_result, errores_semanticos=None):
         errors = []
 
         for char, line, pos in parse_result["errores_lexicos"]:
@@ -102,8 +103,11 @@ class LexerApp(tk.Tk):
                 f"[Sintactico] {error['mensaje']} en linea {error['linea']}, posicion {error['posicion']}."
             )
 
+        for error in (errores_semanticos or []):
+            errors.append(f"[Semantico] {error['mensaje']}.")
+
         if not errors:
-            errors.append("Analisis sintactico completado sin errores.")
+            errors.append("Analisis completado sin errores.")
 
         return errors
 
@@ -116,6 +120,13 @@ class LexerApp(tk.Tk):
         parser = build_parser()
         parse_result = parser.parse(data)
 
+        # Ejecutar el analizador semantico solo si el AST fue construido
+        # (es decir, no hubo errores sintacticos que impidieran construirlo)
+        errores_semanticos = []
+        if parse_result["arbol"] is not None and not parse_result["errores_sintacticos"]:
+            analyzer = build_semantic_analyzer()
+            errores_semanticos = analyzer.analyze(parse_result["arbol"])
+
         lexer = build_lexer()
         lexer.input(data)
 
@@ -126,7 +137,7 @@ class LexerApp(tk.Tk):
                 values=(token.type, token.value, token.lineno, token.lexpos),
             )
 
-        self._set_errors(self._build_error_messages(parse_result))
+        self._set_errors(self._build_error_messages(parse_result, errores_semanticos))
 
 
 if __name__ == "__main__":
