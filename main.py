@@ -7,6 +7,7 @@ from tkinter import ttk
 from lexer import build_lexer
 from parser import build_parser
 from semantic import build_semantic_analyzer
+from translator import build_translator
 
 
 class LexerApp(tk.Tk):
@@ -42,6 +43,11 @@ class LexerApp(tk.Tk):
 
         clear_btn = ttk.Button(button_frame, text="Limpiar", command=self.clear_all)
         clear_btn.pack(side=tk.LEFT, padx=8)
+
+        translate_btn = ttk.Button(
+            button_frame, text="Traducir JS → Py", command=self.translate_code
+        )
+        translate_btn.pack(side=tk.LEFT)
 
         output_frame = ttk.Frame(self)
         output_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=8)
@@ -138,6 +144,57 @@ class LexerApp(tk.Tk):
             )
 
         self._set_errors(self._build_error_messages(parse_result, errores_semanticos))
+
+    def translate_code(self):
+        """Traduce el codigo JavaScript de la entrada a Python."""
+        data = self.input_text.get("1.0", tk.END).strip()
+        if not data:
+            return
+
+        translator = build_translator()
+        python_code = translator.translate(data)
+        self._open_translator_window(python_code)
+
+    def _open_translator_window(self, python_code: str):
+        """
+        Abre una ventana emergente con el código Python traducido.
+        El contenido es de solo lectura y tiene barras de desplazamiento.
+        """
+        win = tk.Toplevel(self)
+        win.title("Resultado de traduccion — Python")
+        win.geometry("720x520")
+
+        ttk.Label(
+            win,
+            text="Código Python traducido:",
+            font=("Helvetica", 12, "bold"),
+        ).pack(pady=8, anchor="w", padx=12)
+
+        frame = ttk.Frame(win)
+        frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=(0, 4))
+
+        scroll_y = ttk.Scrollbar(frame)
+        scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
+
+        scroll_x = ttk.Scrollbar(frame, orient="horizontal")
+        scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
+
+        text = tk.Text(
+            frame,
+            wrap="none",
+            font=("Courier", 11),
+            yscrollcommand=scroll_y.set,
+            xscrollcommand=scroll_x.set,
+        )
+        text.pack(fill=tk.BOTH, expand=True)
+
+        scroll_y.config(command=text.yview)
+        scroll_x.config(command=text.xview)
+
+        text.insert("1.0", python_code)
+        text.configure(state="disabled")
+
+        ttk.Button(win, text="Cerrar", command=win.destroy).pack(pady=8)
 
 
 if __name__ == "__main__":
