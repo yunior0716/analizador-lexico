@@ -4,6 +4,7 @@ class SemanticAnalyzer:
     def __init__(self):
         self.errors = []
         self.scopes = [{}]
+        self.all_symbols = []  # Registro completo de todas las variables declaradas
 
     def _enter_scope(self):
         self.scopes.append({})
@@ -18,6 +19,12 @@ class SemanticAnalyzer:
             self._error(f"Variable '{nombre}' ya fue declarada en este bloque")
         else:
             scope_actual[nombre] = tipo
+            scope_level = len(self.scopes) - 1
+            self.all_symbols.append({
+                "nombre": nombre,
+                "tipo": tipo,
+                "scope": f"Bloque {scope_level}" if scope_level > 0 else "Global",
+            })
 
     def _lookup(self, nombre):
         """Busca una variable del scope mas interno al mas externo.
@@ -34,6 +41,7 @@ class SemanticAnalyzer:
         """Recibe el AST del parser y devuelve una lista de errores semanticos."""
         self.errors = []
         self.scopes = [{}]
+        self.all_symbols = []
         if ast is not None:
             self._visit(ast)
         return self.errors
